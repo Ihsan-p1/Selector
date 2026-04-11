@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { registerAllIPC } from './ipc/index';
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -18,6 +19,7 @@ function createWindow(): BrowserWindow {
       sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: false, // Allow file:// protocol for local images
     },
   });
 
@@ -41,10 +43,11 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
-  // Set app user model id for Windows
   electronApp.setAppUserModelId('com.selector.app');
 
-  // Dev: open devtools with F12, ignore Ctrl+R in production
+  // Register all IPC handlers before creating window
+  registerAllIPC();
+
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
