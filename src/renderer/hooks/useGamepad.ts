@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useShortcutStore } from '../stores/shortcut.store';
 import { executeAction } from './useKeyboardShortcuts';
 
@@ -85,4 +85,29 @@ export function useGamepad() {
       window.removeEventListener('gamepaddisconnected', handleDisconnect);
     };
   }, [resolveButton]);
+}
+
+/**
+ * Simple hook to track gamepad connection state.
+ */
+export function useGamepadConnected(): boolean {
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
+
+    // Check if already connected
+    const gamepads = navigator.getGamepads();
+    if (gamepads[0]?.connected) setConnected(true);
+
+    window.addEventListener('gamepadconnected', onConnect);
+    window.addEventListener('gamepaddisconnected', onDisconnect);
+    return () => {
+      window.removeEventListener('gamepadconnected', onConnect);
+      window.removeEventListener('gamepaddisconnected', onDisconnect);
+    };
+  }, []);
+
+  return connected;
 }
