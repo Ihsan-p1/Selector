@@ -2,11 +2,13 @@ import { useRef, useState } from 'react';
 import { Image as ImageIcon, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePhotoStore } from '../../stores/photo.store';
-import { useImageCache } from '../../hooks/useImageCache';
+import { useFullImage, useImageCache } from '../../hooks/useImageCache';
 
 export function LoupeView() {
   const currentPhoto = usePhotoStore(s => s.getCurrentPhoto)();
-  const imageUrl = useImageCache(currentPhoto);
+  const fullImageUrl = useFullImage(currentPhoto);
+  const thumbnailUrl = useImageCache(currentPhoto);
+  const imageUrl = fullImageUrl || thumbnailUrl; // Full res preferred, thumbnail as fallback
 
   const imageRef = useRef<HTMLImageElement>(null);
   const [loupeActive, setLoupeActive] = useState(false);

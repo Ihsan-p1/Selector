@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { registerAllIPC } from './ipc/index';
+import { shutdownExifTool } from './services/exif.service';
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -64,3 +65,8 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+
+app.on('before-quit', async () => {
+  await shutdownExifTool();
+});
+

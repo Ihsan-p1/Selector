@@ -1,8 +1,12 @@
 import { ipcMain, dialog, app } from 'electron';
 import { registerFileHandlers } from './file.ipc';
+import { registerExifHandlers } from './exif.ipc';
+import { registerThumbnailHandlers } from './thumbnail.ipc';
 
 export function registerAllIPC(): void {
   registerFileHandlers();
+  registerExifHandlers();
+  registerThumbnailHandlers();
 
   // App info
   ipcMain.handle('app:get-version', () => {

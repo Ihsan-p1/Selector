@@ -10,22 +10,28 @@ export function RightPanel() {
 
   const exif = currentPhoto.exif;
   const sharpness = currentPhoto.sharpnessScore;
+  const histogram = currentPhoto.histogram;
 
   return (
     <aside className="w-64 border-l border-zinc-800 bg-zinc-900 flex flex-col shrink-0 overflow-y-auto">
-      {/* Histogram placeholder — will be real in Phase 3 */}
+      {/* Histogram */}
       <div className="p-3 border-b border-zinc-800">
         <h2 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <BarChart3 className="w-3 h-3" /> Histogram
         </h2>
-        <div className="h-20 w-full bg-zinc-950 rounded border border-zinc-800 flex items-end overflow-hidden">
-          {[...Array(48)].map((_, i) => (
-            <div
-              key={i}
-              className="flex-1 bg-zinc-700 mx-px rounded-t-sm"
-              style={{ height: `${Math.sin(i * 0.3) * 40 + Math.random() * 30 + 10}%` }}
-            />
-          ))}
+        <div className="h-20 w-full bg-zinc-950 rounded border border-zinc-800 flex items-end overflow-hidden relative">
+          {histogram ? (
+            <HistogramRenderer histogram={histogram} />
+          ) : (
+            // Placeholder bars
+            [...Array(48)].map((_, i) => (
+              <div
+                key={i}
+                className="flex-1 bg-zinc-800 mx-px rounded-t-sm animate-pulse"
+                style={{ height: `${Math.sin(i * 0.3) * 30 + 20}%` }}
+              />
+            ))
+          )}
         </div>
       </div>
 
@@ -53,7 +59,7 @@ export function RightPanel() {
                 )} />
               </>
             ) : (
-              <span className="text-xs text-zinc-600">—</span>
+              <span className="text-xs text-zinc-600 animate-pulse">computing...</span>
             )}
           </div>
         </div>
@@ -106,6 +112,58 @@ export function RightPanel() {
         </div>
       </div>
     </aside>
+  );
+}
+
+/**
+ * Real histogram renderer — overlays R, G, B channels.
+ */
+function HistogramRenderer({ histogram }: { histogram: [number[], number[], number[]] }) {
+  const [r, g, b] = histogram;
+  const bins = 64; // Downsample 256 bins to 64 for display
+  const binSize = 256 / bins;
+
+  const downsample = (channel: number[]): number[] => {
+    const result: number[] = [];
+    for (let i = 0; i < bins; i++) {
+      let sum = 0;
+      const start = Math.floor(i * binSize);
+      const end = Math.floor((i + 1) * binSize);
+      for (let j = start; j < end; j++) {
+        sum += channel[j] ?? 0;
+      }
+      result.push(sum / binSize);
+    }
+    return result;
+  };
+
+  const rDown = downsample(r);
+  const gDown = downsample(g);
+  const bDown = downsample(b);
+
+  const maxVal = Math.max(
+    Math.max(...rDown),
+    Math.max(...gDown),
+    Math.max(...bDown),
+    0.001,
+  );
+
+  return (
+    <div className="absolute inset-0 flex items-end">
+      {Array.from({ length: bins }, (_, i) => {
+        const rH = (rDown[i] / maxVal) * 100;
+        const gH = (gDown[i] / maxVal) * 100;
+        const bH = (bDown[i] / maxVal) * 100;
+
+        return (
+          <div key={i} className="flex-1 relative h-full flex items-end">
+            <div className="absolute bottom-0 w-full bg-red-500/30 rounded-t-[1px]" style={{ height: `${rH}%` }} />
+            <div className="absolute bottom-0 w-full bg-green-500/30 rounded-t-[1px]" style={{ height: `${gH}%` }} />
+            <div className="absolute bottom-0 w-full bg-blue-500/30 rounded-t-[1px]" style={{ height: `${bH}%` }} />
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

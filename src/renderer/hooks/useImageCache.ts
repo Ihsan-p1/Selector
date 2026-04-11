@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { PhotoEntry } from '@/shared/types';
 
-const MAX_CACHE = 10;
+const MAX_CACHE = 50;
 const cache = new Map<string, string>();
 
 /**
- * Returns an object URL for the given photo.
- * In Electron, uses file:// protocol via IPC.
- * In browser dev mode, uses URL.createObjectURL from the File object.
+ * Returns a displayable URL for the given photo.
+ * In Electron: uses thumbnail service (small) or file:// protocol (full).
+ * In browser dev: returns null (no File object access).
  */
 export function useImageCache(photo: PhotoEntry | null): string | null {
   const [url, setUrl] = useState<string | null>(null);
@@ -31,12 +31,8 @@ export function useImageCache(photo: PhotoEntry | null): string | null {
         let imageUrl: string | null = null;
 
         if (window.selectorAPI) {
-          // Electron mode — get URL via IPC
-          imageUrl = await window.selectorAPI.readImage(photo.filePath);
-        } else {
-          // Browser fallback — use File objects if available via webkitdirectory
-          // This won't work for real paths, but handles dev mode with file input
-          imageUrl = null;
+          // Electron mode — get thumbnail via IPC
+          imageUrl = await window.selectorAPI.getThumbnail(photo.id, photo.filePath);
         }
 
         if (!cancelled && imageUrl) {
@@ -54,6 +50,56 @@ export function useImageCache(photo: PhotoEntry | null): string | null {
         }
       } catch (err) {
         console.error('Failed to load image:', photo.fileName, err);
+        if (!cancelled) setUrl(null);
+      }
+    };
+
+    loadImage();
+
+    return () => { cancelled = true; };
+  }, [photo?.id]);
+
+  return url;
+}
+
+/**
+ * Returns a full-resolution URL for loupe view.
+ */
+export function useFullImage(photo: PhotoEntry | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!photo) {
+      setUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadImage = async () => {
+      try {
+        let imageUrl: string | null = null;
+
+        if (window.selectorAPI) {
+          // Electron mode — get full image
+          imageUrl = await window.selectorAPI.readImage(photo.filePath);
+
+          // If readImage returns null (RAW), try the extracted preview
+          if (!imageUrl) {
+            imageUrl = await window.selectorAPI.extractPreview(photo.filePath, '');
+          }
+        }
+
+        // Fallback to file:// protocol
+        if (!imageUrl && photo.filePath.includes(':')) {
+          imageUrl = `file://${photo.filePath.replace(/\\/g, '/')}`;
+        }
+
+        if (!cancelled && imageUrl) {
+          setUrl(imageUrl);
+        }
+      } catch (err) {
+        console.error('Failed to load full image:', photo.fileName, err);
         if (!cancelled) setUrl(null);
       }
     };

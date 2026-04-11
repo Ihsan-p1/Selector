@@ -69,10 +69,43 @@ export function WelcomeScreen() {
         }));
         entries.sort((a, b) => a.fileName.localeCompare(b.fileName));
         setPhotos(entries);
+
+        // Async: load EXIF data in background
+        loadExifBatch(entries);
       }
     } else {
       // Fallback for browser dev mode
       fileInputRef.current?.click();
+    }
+  };
+
+  // Load EXIF metadata asynchronously in chunks
+  const loadExifBatch = async (entries: PhotoEntry[]) => {
+    if (!window.selectorAPI) return;
+    const updatePhoto = usePhotoStore.getState().updatePhoto;
+    const photos = usePhotoStore.getState().photos;
+
+    const CHUNK = 10;
+    for (let i = 0; i < entries.length; i += CHUNK) {
+      const chunk = entries.slice(i, i + CHUNK);
+      const paths = chunk.map(e => e.filePath);
+
+      try {
+        const exifResults = await window.selectorAPI.getExifBatch(paths);
+        const currentPhotos = usePhotoStore.getState().photos;
+
+        for (const entry of chunk) {
+          const exifData = exifResults[entry.filePath];
+          if (exifData) {
+            const idx = currentPhotos.findIndex(p => p.id === entry.id);
+            if (idx >= 0) {
+              updatePhoto(idx, { exif: exifData });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('EXIF batch load failed:', err);
+      }
     }
   };
 

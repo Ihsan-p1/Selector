@@ -2,6 +2,7 @@ import { usePhotoStore } from '../../stores/photo.store';
 import { useUIStore } from '../../stores/ui.store';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useGamepad } from '../../hooks/useGamepad';
+import { usePhotoAnalysis } from '../../hooks/usePhotoAnalysis';
 import { TopBar } from './TopBar';
 import { LeftPanel } from './LeftPanel';
 import { RightPanel } from './RightPanel';
@@ -21,6 +22,9 @@ export function AppShell() {
   // Register input handlers
   useKeyboardShortcuts();
   useGamepad();
+
+  // Auto-compute histogram + sharpness for current photo
+  usePhotoAnalysis();
 
   // No photos loaded — show welcome
   if (photos.length === 0) {
