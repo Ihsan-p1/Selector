@@ -92,7 +92,7 @@ export function useFullImage(photo: PhotoEntry | null): string | null {
 
         // Fallback to file:// protocol
         if (!imageUrl && photo.filePath.includes(':')) {
-          imageUrl = `file://${photo.filePath.replace(/\\/g, '/')}`;
+          imageUrl = `file:///${photo.filePath.replace(/\\/g, '/')}`;
         }
 
         if (!cancelled && imageUrl) {

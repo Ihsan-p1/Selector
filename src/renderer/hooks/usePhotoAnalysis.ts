@@ -87,7 +87,7 @@ function getImageUrl(photo: { filePath: string; thumbnailPath: string | null }):
   if (photo.thumbnailPath) return photo.thumbnailPath;
   // In Electron, use file:// protocol
   if (photo.filePath.includes(':')) {
-    return `file://${photo.filePath.replace(/\\/g, '/')}`;
+    return `file:///${photo.filePath.replace(/\\/g, '/')}`;
   }
   return null;
 }

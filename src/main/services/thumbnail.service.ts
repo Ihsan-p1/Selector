@@ -28,7 +28,7 @@ export async function getThumbnail(photoId: string, filePath: string): Promise<s
 
   // Return cached thumbnail if exists
   if (fs.existsSync(cachePath)) {
-    return `file://${cachePath.replace(/\\/g, '/')}`;
+    return `file:///${cachePath.replace(/\\/g, '/')}`;
   }
 
   try {
@@ -61,7 +61,7 @@ async function generateStandardThumbnail(filePath: string, cachePath: string): P
     const buffer = resized.toJPEG(80);
 
     fs.writeFileSync(cachePath, buffer);
-    return `file://${cachePath.replace(/\\/g, '/')}`;
+    return `file:///${cachePath.replace(/\\/g, '/')}`;
   } catch (err) {
     console.error(`Standard thumbnail failed for ${filePath}:`, err);
     return null;
@@ -90,11 +90,11 @@ async function generateRawThumbnail(filePath: string, cachePath: string): Promis
       const buffer = resized.toJPEG(80);
 
       fs.writeFileSync(cachePath, buffer);
-      return `file://${cachePath.replace(/\\/g, '/')}`;
+      return `file:///${cachePath.replace(/\\/g, '/')}`;
     } catch (err) {
       console.error(`RAW thumbnail resize failed for ${filePath}:`, err);
       // Fallback: use the preview directly
-      return `file://${previewPath.replace(/\\/g, '/')}`;
+      return `file:///${previewPath.replace(/\\/g, '/')}`;
     }
   }
 

@@ -69,12 +69,12 @@ export function registerFileHandlers(): void {
       const previewDir = getPreviewCacheDir();
       const previewPath = await extractRawPreview(filePath, previewDir);
       if (previewPath) {
-        return `file://${previewPath.replace(/\\/g, '/')}`;
+        return `file:///${previewPath.replace(/\\/g, '/')}`;
       }
       return null;
     }
     // Standard format — return file protocol URL
-    return `file://${filePath.replace(/\\/g, '/')}`;
+    return `file:///${filePath.replace(/\\/g, '/')}`;
   });
 }
 

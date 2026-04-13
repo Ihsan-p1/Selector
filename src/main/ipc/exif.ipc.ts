@@ -27,7 +27,7 @@ export function registerExifHandlers(): void {
     const previewDir = getPreviewCacheDir();
     const previewPath = await extractRawPreview(rawPath, previewDir);
     if (previewPath) {
-      return `file://${previewPath.replace(/\\/g, '/')}`;
+      return `file:///${previewPath.replace(/\\/g, '/')}`;
     }
     return null;
   });
