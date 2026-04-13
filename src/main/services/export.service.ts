@@ -5,6 +5,7 @@ import { BrowserWindow } from 'electron';
 // ═══════════════════════════════════════════
 // Selector — Export Service (Main Process)
 // Copies or moves photos to destination folder
+// With cancellation support via AbortController
 // ═══════════════════════════════════════════
 
 export interface ExportOptions {
@@ -21,12 +22,17 @@ export interface ExportPhoto {
 export interface ExportResult {
   success: number;
   failed: number;
+  cancelled: boolean;
   errors: string[];
 }
+
+// Active abort controller for current export
+let activeAbortController: AbortController | null = null;
 
 /**
  * Export photos to destination folder.
  * Sends progress events to renderer via IPC.
+ * Supports cancellation via abort signal.
  */
 export async function exportPhotos(
   options: ExportOptions,
@@ -34,6 +40,10 @@ export async function exportPhotos(
   window: BrowserWindow | null
 ): Promise<ExportResult> {
   const { mode, destination } = options;
+
+  // Create new abort controller for this export
+  activeAbortController = new AbortController();
+  const signal = activeAbortController.signal;
 
   // Ensure destination exists
   fs.mkdirSync(destination, { recursive: true });
@@ -43,6 +53,12 @@ export async function exportPhotos(
   const errors: string[] = [];
 
   for (let i = 0; i < photos.length; i++) {
+    // Check for cancellation
+    if (signal.aborted) {
+      activeAbortController = null;
+      return { success, failed, cancelled: true, errors };
+    }
+
     const photo = photos[i];
     const destPath = path.join(destination, photo.fileName);
 
@@ -80,7 +96,17 @@ export async function exportPhotos(
     }
   }
 
-  return { success, failed, errors };
+  activeAbortController = null;
+  return { success, failed, cancelled: false, errors };
+}
+
+/**
+ * Cancel the currently running export.
+ */
+export function cancelExport(): void {
+  if (activeAbortController) {
+    activeAbortController.abort();
+  }
 }
 
 /**

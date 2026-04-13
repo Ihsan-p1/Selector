@@ -62,6 +62,9 @@ const selectorAPI = {
     ipcRenderer.removeAllListeners('export:progress');
   },
 
+  cancelExport: (): Promise<void> =>
+    ipcRenderer.invoke('export:cancel'),
+
   // ── Dialog Operations ──
   chooseDirectory: (): Promise<string | null> =>
     ipcRenderer.invoke('dialog:choose-directory'),

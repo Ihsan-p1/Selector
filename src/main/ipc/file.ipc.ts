@@ -2,6 +2,7 @@ import { ipcMain, dialog } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ALL_FORMATS } from '../../shared/types';
+import { extractRawPreview, getPreviewCacheDir } from '../services/exif.service';
 import type { FileInfo } from '../../shared/types';
 
 export function registerFileHandlers(): void {
@@ -62,14 +63,17 @@ export function registerFileHandlers(): void {
 
   // ── Read Image (for loupe view) ──
   ipcMain.handle('file:read-image', async (_event, filePath: string) => {
-    // For standard formats, return file:// protocol URL
-    // For RAW, this will be handled by exif:extract-preview (Phase 3)
     const ext = path.extname(filePath).toLowerCase().slice(1);
     if (isRawExtension(ext)) {
-      // Placeholder — will be replaced with ExifTool preview extraction
+      // Extract embedded JPEG preview from RAW via ExifTool
+      const previewDir = getPreviewCacheDir();
+      const previewPath = await extractRawPreview(filePath, previewDir);
+      if (previewPath) {
+        return `file://${previewPath.replace(/\\/g, '/')}`;
+      }
       return null;
     }
-    // Return as file protocol URL (Electron can load these)
+    // Standard format — return file protocol URL
     return `file://${filePath.replace(/\\/g, '/')}`;
   });
 }

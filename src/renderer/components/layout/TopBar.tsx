@@ -1,10 +1,10 @@
-import { LayoutGrid, Maximize, Info, SlidersHorizontal, Download } from 'lucide-react';
+import { LayoutGrid, Maximize, Info, SlidersHorizontal, Download, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePhotoStore } from '../../stores/photo.store';
 import { useUIStore } from '../../stores/ui.store';
 import { useFilterStore } from '../../stores/filter.store';
 
-export function TopBar({ onExport }: { onExport?: () => void }) {
+export function TopBar({ onExport, onSessionDialog }: { onExport?: () => void; onSessionDialog?: () => void }) {
   const currentIndex = usePhotoStore(s => s.currentIndex);
   const photos = usePhotoStore(s => s.photos);
   const viewMode = useUIStore(s => s.viewMode);
@@ -82,6 +82,15 @@ export function TopBar({ onExport }: { onExport?: () => void }) {
         >
           <Download className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Export</span>
+        </button>
+
+        <button
+          onClick={onSessionDialog}
+          className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-zinc-800"
+          title="Sessions"
+        >
+          <Clock className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Sessions</span>
         </button>
 
         <div className="h-4 w-px bg-zinc-800" />

@@ -41,7 +41,7 @@ npm install
 # Start the development server with Hot Module Replacement (HMR)
 npm run dev
 
-# Run the Vitest test suite (62 tests passing)
+# Run the Vitest test suite (138 tests passing)
 npm test
 
 # Build the production executable for Windows
@@ -98,13 +98,17 @@ Selector is built to be manipulated entirely without a mouse. Mappings are handl
 
 Per the [Test-Driven Development Plan (TDD)](./docs/TDD.md), selector prioritizes business logic, data persistence, and input reliability over pure cosmetic component rendering.
 
-- **Status**: **62/62 Unit tests passing.** (Execution time <500ms).
+- **Status**: **138/138 tests passing** across 8 test suites (execution time <1s).
 - **Framework**: Powered by `Vitest`.
 - **Coverage Areas**: 
-  - `photo.store.ts`: State management and array manipulation
-  - `filter.store.ts`: Flag/rating/color filtering queries and combination edge-cases
-  - `shortcut.store.ts`: Gamepad and keyboard cross-mapping, conflict detections
-  - `session.service.ts`: SQLite transaction safety
+  - `photo.store.ts`: State management and array manipulation (32 tests)
+  - `filter.store.ts`: Flag/rating/color filtering queries and combination edge-cases (13 tests)
+  - `shortcut.store.ts`: Gamepad and keyboard cross-mapping, conflict detections (17 tests)
+  - `session.store.ts`: Session lifecycle, dirty tracking, save/restore state (8 tests)
+  - `ui.store.ts`: View modes, panel toggles, zoom/grid clamping, toasts (16 tests)
+  - `image-formats.ts`: Format detection, RAW brand identification, MIME types (34 tests)
+  - `utils.ts`: Class merging, file size formatting, ID generation (14 tests)
+  - **Integration**: Full culling workflow — import → flag → rate → filter → session restore (4 tests)
 
 To run tests in watch mode:
 ```bash

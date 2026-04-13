@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { usePhotoStore } from '../stores/photo.store';
 import { useUIStore } from '../stores/ui.store';
 import { useFilterStore } from '../stores/filter.store';
+import { useSessionStore } from '../stores/session.store';
 import { useShortcutStore, type ActionId } from '../stores/shortcut.store';
 import type { ColorLabel, StarRating } from '@/shared/types';
 
@@ -43,7 +44,7 @@ export function executeAction(actionId: ActionId): void {
 
   const { currentIndex, photos } = photoStore;
   const currentPhoto = photos[currentIndex];
-  if (!currentPhoto && !actionId.startsWith('filter.') && !actionId.startsWith('help.') && !actionId.startsWith('view.')) {
+  if (!currentPhoto && !actionId.startsWith('filter.') && !actionId.startsWith('help.') && !actionId.startsWith('view.') && !actionId.startsWith('export.') && !actionId.startsWith('session.')) {
     return;
   }
 
@@ -167,6 +168,26 @@ export function executeAction(actionId: ActionId): void {
       uiStore.toggleShortcutOverlay();
       break;
 
+    // Export — trigger export dialog via AppShell's exported function
+    case 'export.open': {
+      // Dynamic import to avoid circular deps
+      import('../components/layout/AppShell').then(m => m.openExportDialog());
+      break;
+    }
+
+    // Session save
+    case 'session.save': {
+      const sessionStore = useSessionStore.getState();
+      if (sessionStore.activeSessionId) {
+        const states = photoStore.exportStates();
+        sessionStore.saveSession(states);
+        uiStore.showToast('✓ Session saved', 'success');
+      } else {
+        uiStore.showToast('No active session', 'warning');
+      }
+      break;
+    }
+
     // Filter
     case 'filter.picks':
       filterStore.setFlagFilter(['pick']);
@@ -186,7 +207,18 @@ export function executeAction(actionId: ActionId): void {
       photoStore.selectAll();
       break;
 
+    // Remove from collection
+    case 'photo.remove':
+      // Remove current photo from collection (not from disk)
+      if (currentPhoto) {
+        const newPhotos = photos.filter((_, i) => i !== currentIndex);
+        photoStore.setPhotos(newPhotos);
+        uiStore.showToast('Removed from collection', 'info');
+      }
+      break;
+
     default:
       break;
   }
 }
+
